@@ -17,10 +17,10 @@
 /**
  * Planet eStream v5 Repository Plugin
  *
- * @since 2.0
- * @package    repository_planetestream
- * @copyright  2012 Planet eStream
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @since       2.0
+ * @package     repository_planetestream
+ * @copyright   2012 Planet eStream
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
 
@@ -30,9 +30,9 @@ require_login();
 
 class repository_planetestream extends repository {
 
-    public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array()) {
-        parent::__construct($repositoryid, $context, $options);
-    }
+    // public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array()) {
+    //    parent::__construct($repositoryid, $context, $options);
+    // }
 
     public function check_login() {
         return !empty($this->keyword);
@@ -98,8 +98,7 @@ class repository_planetestream extends repository {
     }
 
     private function funcgetlist($keyword, $pageindex, $sort, $cat, $show) {
-        global $USER;
-        global $SESSION;
+        global $USER, $SESSION;
 
         $list = array();
 
@@ -191,7 +190,6 @@ class repository_planetestream extends repository {
     /**
      * planetestream plugin doesn't support global search
      */
-
     public function global_search() {
         return false;
     }
@@ -229,7 +227,6 @@ class repository_planetestream extends repository {
      * @param int $page
      * @return array
      */
-
     public function get_listing($path = '', $page = '') {
         return array();
     }
@@ -237,10 +234,9 @@ class repository_planetestream extends repository {
     /**
      * Generate search form
      */
-
     public function print_login($ajax = true) {
-        global $USER;
-        global $SESSION;
+        global $USER, $SESSION;
+
         $ret         = array();
         // Help.
         $help        = new stdClass();
@@ -257,6 +253,7 @@ class repository_planetestream extends repository {
         $search->id    = 'planetestream_search';
         $search->name  = 's';
         $search->label = get_string('search', 'repository_planetestream') . ': ';
+
         // Media type.
         $show          = new stdClass();
         $show->type    = 'select';
@@ -281,6 +278,7 @@ class repository_planetestream extends repository {
         $show->id      = 'planetestream_show';
         $show->name    = 'planetestream_show';
         $show->label   = get_string('show', 'repository_planetestream') . ': ';
+
         // Sort cb.
         $sort          = new stdClass();
         $sort->type    = 'select';
@@ -305,6 +303,7 @@ class repository_planetestream extends repository {
         $sort->id      = 'planetestream_sort';
         $sort->name    = 'planetestream_sort';
         $sort->label   = get_string('sort_orderby', 'repository_planetestream') . ': ';
+
         // Category cb.
         $category           = new stdClass();
         $category->type     = 'select';
@@ -363,7 +362,6 @@ class repository_planetestream extends repository {
      * file types supported by planetestream plugin
      * @return array
      */
-
     public function supported_filetypes() {
         return array(
             'video'
@@ -374,7 +372,6 @@ class repository_planetestream extends repository {
      * Gets the names of the repository config options as an array
      * @return array The array of config option names
      */
-
     public static function get_type_option_names() {
         return array(
             'url',
@@ -388,11 +385,13 @@ class repository_planetestream extends repository {
      * @param moodleform $mform Moodle form (passed by reference)
      * @param string $classname repository class name
      */
-
     public static function type_config_form($mform, $classname = 'repository') {
         parent::type_config_form($mform, $classname);
 
         $mform->addElement('text', 'url', get_string('settingsurl', 'repository_planetestream'));
+        $mform->setType('url', PARAM_RAW);
+        $mform->addRule('url', get_string('required'), 'required', null, 'client');
+
         $mform->addElement('static', null, '', get_string('settingsurl_text', 'repository_planetestream'));
 
         $mform->addElement('static', null, '', '<p>&nbsp;</p><p>Please note: The remainder of the configuration options can be found on your Planet eStream Website Administration Console, within the <span style="font-style: italic">VLE Integration section.</span></p>');
@@ -402,7 +401,6 @@ class repository_planetestream extends repository {
      * planetestream plugin only return external links
      * @return int
      */
-
     public function supported_returntypes() {
         return FILE_EXTERNAL;
     }
