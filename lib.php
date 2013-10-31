@@ -48,6 +48,8 @@ class repository_planetestream extends repository {
 
         if (isset($_POST['planetestream_chapters'])) {
             $chapters = 'on';
+        } else {
+            $chapters = false;
         }
 
         if ($page && !$searchtext && isset($SESSION->{$sesskeyword})) {
@@ -122,7 +124,7 @@ class repository_planetestream extends repository {
 
         $dimensions = '';
 
-        if (isset($SESSION->{$sessdimensions})) {
+        if (isset($sessdimensions) && isset($SESSION->{$sessdimensions})) {
             $dimensions = $SESSION->{$sessdimensions};
         }
 
@@ -299,13 +301,14 @@ class repository_planetestream extends repository {
         $category->type     = 'select';
         $url           = (string) $this->get_url() . '/VLE/Moodle/Default.aspx?show=info&delta=' . $this->funcobfuscate($USER->username) . '&checksum=' . $this->funcgetchecksum();
 
-        $c             = new curl(array(
-            'cache' => false,
-            'module_cache' => false
+        $c = new curl(array(
+            'cache'         => false,
+            'module_cache'  => false
         ));
 
-        curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 6);
-        curl_setopt($c, CURLOPT_TIMEOUT, 12);
+        $c->connecttimeout  = 6;
+        $c->timeout         = 12;
+
         $content       = $c->get($url);
         $xml           = simplexml_load_string($content);
         $cats          = array();
