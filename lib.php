@@ -30,46 +30,52 @@ require_login();
 
 class repository_planetestream extends repository {
 
-    // public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array()) {
-    //    parent::__construct($repositoryid, $context, $options);
-    // }
-
     public function check_login() {
         return !empty($this->keyword);
     }
 
-    public function search($search_text, $page = 0) {
+    public function search($searchtext, $page = 0) {
         global $SESSION;
 
-        $sort           = optional_param('planetestream_sort', '', PARAM_TEXT);
-        $sess_keyword   = 'planetestream_' . $this->id . '_keyword';
-        $sess_sort      = 'planetestream_' . $this->id . '_sort';
-        $sess_cat       = 'planetestream_' . $this->id . '_category';
-        $sess_show      = 'planetestream_' . $this->id . '_mediatype';
-        $cat            = optional_param('planetestream_cat', '', PARAM_TEXT);
-        $show           = optional_param('planetestream_show', '', PARAM_TEXT);
+        $sesskeyword    = 'planetestream_' . $this->id . '_keyword';
+        $sesssort       = 'planetestream_' . $this->id . '_sort';
+        $sesscat        = 'planetestream_' . $this->id . '_category';
+        $sessshow       = 'planetestream_' . $this->id . '_mediatype';
+        $sesschapters   = 'planetestream_' . $this->id . '_chapters';
+        $sort           = optional_param('planetestream_sort', null, PARAM_TEXT);
+        $cat            = optional_param('planetestream_cat', null, PARAM_TEXT);
+        $show           = optional_param('planetestream_show', null, PARAM_TEXT);
 
-        if ($page && !$search_text && isset($SESSION->{$sess_keyword})) {
-            $search_text = $SESSION->{$sess_keyword};
+        if (isset($_POST['planetestream_chapters'])) {
+            $chapters = 'on';
         }
-        if ($page && !$sort && isset($SESSION->{$sess_sort})) {
-            $sort = $SESSION->{$sess_sort};
+
+        if ($page && !$searchtext && isset($SESSION->{$sesskeyword})) {
+            $searchtext = $SESSION->{$sesskeyword};
+        }
+        if ($page && !$sort && isset($SESSION->{$sesssort})) {
+            $sort = $SESSION->{$sesssort};
         }
         if (!$sort) {
             $sort = 'relevance'; // Default.
         }
-        if ($page && !$cat && isset($SESSION->{$sess_cat})) {
-            $cat = $SESSION->{$sess_cat};
-        }
-        if ($page && !$show && isset($SESSION->{$sess_show})) {
-            $show = $SESSION->{$sess_show};
+        if ($page && !$cat && isset($SESSION->{$sesscat})) {
+            $cat = $SESSION->{$sesscat};
         }
 
-        // Save search in session.
-        $SESSION->{$sess_keyword} = $search_text;
-        $SESSION->{$sess_sort}    = $sort;
-        $SESSION->{$sess_cat}     = (string) $cat;
-        $SESSION->{$sess_show}    = (string) $show;
+        if ($page && !$show && isset($SESSION->{$sessshow})) {
+            $show = $SESSION->{$sessshow};
+        }
+
+        if ($page && !$chapters && isset($SESSION->{$sesschapters})) {
+            $chapters = $SESSION->{$sesschapters};
+        }
+
+        $SESSION->{$sesskeyword}   = $searchtext;
+        $SESSION->{$sesssort}      = $sort;
+        $SESSION->{$sesscat}       = (string) $cat;
+        $SESSION->{$sessshow}      = (string) $show;
+        $SESSION->{$sesschapters}  = (string) $chapters;
 
         $ret            = array();
         $ret['nologin'] = true;
@@ -79,15 +85,16 @@ class repository_planetestream extends repository {
             $ret['page'] = 1;
         }
 
-        if ($search_text=='') {
-            $search_text='*';
+        if ($searchtext == '') {
+            $searchtext = '*';
         }
 
-        $ret['list']      = $this->funcgetlist($search_text, $ret['page']-1, $sort, $cat, $show);
+        $ret['list']      = $this->funcgetlist($searchtext, $ret['page'] - 1, $sort, $cat, $show, $chapters);
 
         $ret['norefresh'] = true;
         $ret['nosearch']  = true;
         $ret['pages']     = -1;
+
         if (count($ret['list']) < 10) {
             $ret['pages'] = 0;
             $ret['page']  = 0;
@@ -97,91 +104,75 @@ class repository_planetestream extends repository {
 
     }
 
-    private function funcgetlist($keyword, $pageindex, $sort, $cat, $show) {
+    private function funcgetlist($keyword, $pageindex, $sort, $cat, $show, $chapters) {
         global $USER, $SESSION;
 
         $list = array();
 
         $this->feed_url = $this->get_url() . '/VLE/Moodle/Default.aspx?search=' . urlencode($keyword) . '&format=5&pageindex=' .
             $pageindex . '&orderby=' . $sort . '&cat=' . $cat . '&show=' . $show . '&delta=' .
-            $this->funcobfuscate($USER->username) . '&checksum=' . $this->funcgetchecksum();
+            $this->funcobfuscate($USER->username) . '&checksum=' . $this->funcgetchecksum() . '&mc=' . $chapters;
 
         $c = new curl(array(
-            'cache' => false,
-            'module_cache' => false
+            'cache'         => false,
+            'module_cache'  => false
         ));
         $content    = $c->get($this->feed_url);
         $xml        = simplexml_load_string($content);
 
         $dimensions = '';
 
-        if (isset($SESSION->{$sess_dimensions})) {
-            $dimensions = $SESSION->{$sess_dimensions};
+        if (isset($SESSION->{$sessdimensions})) {
+            $dimensions = $SESSION->{$sessdimensions};
         }
 
         foreach ($xml->item as $item) {
             $title       = (string) $item->title;
             $description = (string) $item->description;
+            $description = str_replace('[ No Description ]', '', $description);
             $source      = (string) $this->get_url() . '/VLE/Moodle/Video/' . $item->file . '.swf';
             $recordtype  = (string) 'Recording';
+            $tumbnailurl = (string) $this->get_url() . '/GetImage.aspx';
 
-            if ($item->recordtype=='2') {
+            if ($item->recordtype == '2') {
                 $recordtype = 'Playlist';
+            } else if ($item->recordtype == '4') {
+                $recordtype = 'Photoset';
+            } else if ($item->recordtype == '-99') {
+                $recordtype = 'Chapter';
+            }
+            $shorttitle = '';
+
+            $thumbnailcontainerheight = (string) '190';
+            $idparts = explode('~', $item->file);
+
+            if (count($idparts) == 4) {
+                $thumbnailcontainerheight = (string) '90';
+                $tumbnailurl .= '?type=chap&width=120&height=90&id='.$idparts[3];
+                $shorttitle = $title . ' (Chapter) ' . $description;
+
             } else {
-                if ($item->recordtype=='4') {
-                    $recordtype = 'Photoset';
-                }
+                $tumbnailurl .= '?type=cd&width=354&height=190&forceoverlay=true&id='.$idparts[0].'~'.$idparts[1];
+                $shorttitle = $recordtype . ' ' . get_string('addedon', 'repository_planetestream') . ' ' . date('d/m/Y', (integer)$item->addedat) .
+                    ' ' . get_string('addedby', 'repository_planetestream') . ' ' . $item->addedby . ' ' . $title . ' ' . $description;
             }
 
-            $shorttitle  = (string) '<div style="background-color: #fafafa; padding: 2px 12px 2px 12px; font-size: 12px; margin-top: -2px; text-align: left;" onmouseover="var el=document.getElementsByTagName(\'div\');for(var i=0;i<el.length;i++){if(el[i].getAttribute(\'class\')!=undefined){if(el[i].getAttribute(\'class\').indexOf(\'fp-filename-field\')==0){el[i].setAttribute(\'style\', \'z-index:\'+[9000-i]+\';\');}}}">';
-            $shorttitle .= '
-            <div style="margin-left: 120px; font-weight: bold;">' . $title . '</div>
-            <div style="margin: 1px 0 0 120px;">'
-                . '<span style="font-style: italic;">'
-                . $recordtype . '</span> '
-                . get_string('addedon', 'repository_planetestream') . ' '
-                . date('d/m/Y', (integer)$item->addedat) . ' '
-                . get_string('addedby', 'repository_planetestream') . ' '
-                . $item->addedby . '
-            </div>
-            <div style="margin-top: 6px; line-height: 18px; text-align: justify;">' . $description . '</div>';
-            $chapters = (string) '';
-            $strbgcol = (string) '#fafafa';
-            foreach ($item->chapters->chapter as $chapter) {
-                $chapters .= '<tr style="background-color: '. $strbgcol . '">';
-                $chapters .= '<td style="width: 122px; text-align: center;"><img src="' . $this->get_url() . '/GetImage.aspx?type=chap&width=108&height=81&overlay=true&id=' . $chapter->id . '"></td>';
-                $chapters .= '<td style="line-height: 18px; text-align: justify;">' . $chapter->title . '</td>';
-                $chapters .= '<td style="width: 28px; text-align: center;"><a href="#" style="text-decoration: underline" onclick="var el=document.getElementsByTagName(\'input\');for(var i=0;i<el.length;i++){if(el[i].id.indexOf(\'filesource-\')==0){window.pesx=el[i].id;setTimeout(\'document.getElementById(window.pesx).value=document.getElementById(window.pesx).value.replace(\\\'.swf\\\',\\\'~' . $chapter->id . '.swf\\\')\',110);} }; return false;">add</a></td>';
-                $chapters .= '</tr>';
-                if ($strbgcol == '#fafafa') {
-                    $strbgcol = '#fbfbfb';
-                } else {
-                    $strbgcol = '#fafafa';
-                }
-            }
-
-            if ($chapters!='') {
-                $shorttitle .= '<table style="border-collapse: separate; border-spacing: 1px;"><tr><td colspan="3" style="font-weight: bold;">Chapters</td></tr>' . $chapters . '</table>';
-            }
-            $shorttitle .= '</div>';
-            $idparts     = explode('~', $item->file);
-            $id      = (string) $idparts[0].'~'.$idparts[1];
             $dimensions  = (string) $SESSION->{'planetestream_' . $this->id . '_dimensions'};
             $list[]      = array(
-                'shorttitle' => $shorttitle,
-                'thumbnail_title' => (string) $title,
-                'title' => (string) $title . '.m4v', // Extension required.
-                'thumbnail' => (string) $this->get_url() . '/GetImage.aspx?type=cd&width=354&height=190&forceoverlay=true&id=' . $id,
-                'thumbnail_width' => '600',
-                'thumbnail_height' => '190',
-                'license' => 'Other',
-                'size' => '',
-                'date' => '',
-                'lastmodified' => '',
-                'datecreated' => $item->addedat,
-                'author' => (string) $item->addedby,
-                'dimensions' => str_replace('?d=', '', $dimensions),
-                'source' => $source . $dimensions
+                'shorttitle'        => $shorttitle,
+                'thumbnail_title'   => $title,
+                'title'             => $title . '.m4v', // Extension required.
+                'thumbnail'         => $tumbnailurl,
+                'thumbnail_width'   => '600',
+                'thumbnail_height'  => $thumbnailcontainerheight,
+                'license'           => 'Other',
+                'size'              => '',
+                'date'              => '',
+                'lastmodified'      => '',
+                'datecreated'       => $item->addedat,
+                'author'            => $item->addedby,
+                'dimensions'        => str_replace('?d=', '', $dimensions),
+                'source'            => $source . $dimensions
             );
         }
         return $list;
@@ -195,25 +186,25 @@ class repository_planetestream extends repository {
     }
 
     private function funcgetchecksum() {
-        $decchecksum = (float)(date('d')+date('m'))+(date('m')*date('d'))+(date('Y')*date('d'));
-        $decchecksum += $decchecksum*(date('d')*2.27409)*.689274;
+        $decchecksum = (float)(date('d') + date('m')) + (date('m') * date('d')) + (date('Y') * date('d'));
+        $decchecksum += $decchecksum * (date('d') * 2.27409) * .689274;
         return md5(floor($decchecksum));
     }
 
     private function funcobfuscate($strx) {
         $strbase64chars = '0123456789aAbBcCDdEeFfgGHhiIJjKklLmMNnoOpPQqRrsSTtuUvVwWXxyYZz/+=';
         $strbase64string = base64_encode($strx);
-        if ($strbase64string=='') {
+        if ($strbase64string == '') {
             return '';
         }
         $strobfuscated = '';
-        for ($i=0; $i<strlen($strbase64string); $i++) {
+        for ($i = 0; $i < strlen($strbase64string); $i++) {
             $intpos = strpos($strbase64chars, substr($strbase64string, $i, 1));
-            if ($intpos==-1) {
+            if ($intpos == -1) {
                 return '';
             }
             $intpos += strlen($strbase64string) + $i;
-            $intpos = $intpos%strlen($strbase64chars);
+            $intpos = $intpos % strlen($strbase64chars);
             $strobfuscated .= substr($strbase64chars, $intpos, 1);
         }
 
@@ -236,10 +227,9 @@ class repository_planetestream extends repository {
      */
     public function print_login($ajax = true) {
         global $USER, $SESSION;
-
-        $ret         = array();
+        $ret = array();
         // Help.
-        $help        = new stdClass();
+        $help = new stdClass();
         $help->type  = 'hidden';
         $help->label = '<div style="position: relative; padding-bottom: 100px; margin-top: -100px;">
             <div style="position: absolute; left: 400px; text-align: right;">
@@ -323,6 +313,7 @@ class repository_planetestream extends repository {
             'value' => '0',
             'label' => 'All'
         );
+
         foreach ($xml->cats->cat as $catitem) {
             $cats[] = array(
                 'value' => (string) $catitem->id,
@@ -334,17 +325,23 @@ class repository_planetestream extends repository {
         } else {
             $category->label = 'Category:';
         }
+        $category->id       = 'planetestream_cat';
+        $category->name     = 'planetestream_cat';
+        $category->options  = $cats;
 
-        $category->id            = 'planetestream_cat';
-        $category->name          = 'planetestream_cat';
-        $category->options       = $cats;
+        $chapters           = new stdClass();
+        $chapters->type     = 'checkbox';
+        $chapters->id       = 'planetestream_chapters';
+        $chapters->name     = 'planetestream_chapters';
+        $chapters->label    = get_string('sort_includechapters', 'repository_planetestream') . ': ';
 
-        $ret['login']            = array(
+        $ret['login']       = array(
             $help,
             $search,
             $show,
             $sort,
-            $category
+            $category,
+            $chapters
         );
         $ret['login_btn_label']  = get_string('search');
         $ret['login_btn_action'] = 'search';
@@ -394,7 +391,7 @@ class repository_planetestream extends repository {
 
         $mform->addElement('static', null, '', get_string('settingsurl_text', 'repository_planetestream'));
 
-        $mform->addElement('static', null, '', '<p>&nbsp;</p><p>Please note: The remainder of the configuration options can be found on your Planet eStream Website Administration Console, within the <span style="font-style: italic">VLE Integration section.</span></p>');
+        $mform->addElement('static', null, '', get_string('settings_config', 'repository_planetestream'));
     }
 
     /**
@@ -409,7 +406,7 @@ class repository_planetestream extends repository {
         $url = (string) get_config('planetestream', 'url');
         $intpos = (int) strpos($url, '://');
         if ($intpos != 0) {
-            $intpos = strpos($url, '/', $intpos+3);
+            $intpos = strpos($url, '/', $intpos + 3);
             if ($intpos != 0) {
                 $url = substr($url, 0, $intpos);
             }

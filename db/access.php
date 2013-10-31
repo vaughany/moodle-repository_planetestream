@@ -26,7 +26,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$capabilities=array(
+$capabilities = array(
     'repository/planetestream:view' => array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,

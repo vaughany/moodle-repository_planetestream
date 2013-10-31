@@ -27,21 +27,26 @@
 /**
  * Strings for component 'repository_planetestream', language 'en', branch 'MOODLE_20_STABLE'
  */
-$string['pluginname']='Planet eStream Search';
-$string['search']='Search';
-$string['planetestream:view']='Use planetestream in file picker';
-$string['configplugin']='planetestream repository type configuration';
-$string['sort_orderby']='Order By';
-$string['sort_orderby_date']='Date Added';
-$string['sort_orderby_rating']='Rating';
-$string['sort_orderby_relevance']='Relevance';
-$string['sort_orderby_popularity']='Popularity';
-$string['addedon']='Added on';
-$string['addedby']='by';
-$string['show']='Show';
-$string['show_all']='All Media Types';
-$string['show_video']='Videos';
-$string['show_playlist']='Playlists';
-$string['show_photoset']='Photosets';
-$string['settingsurl']='Planet eStream URL';
-$string['settingsurl_text']='Please enter the URL to your Planet eStream server.<br />e.g. http://videoserver.mysite.org<br />or https://videoserver.mysite.org<span>';
+
+$string['pluginname'] = 'Planet eStream Search';
+$string['comment'] = 'Part of the Planet eStream solution';
+$string['search'] = 'Search';
+$string['planetestream:view'] = 'Use planetestream in file picker';
+$string['configplugin'] = 'planetestream repository type configuration';
+$string['sort_orderby'] = 'Order By';
+$string['sort_orderby_date'] = 'Date Added';
+$string['sort_orderby_rating'] = 'Rating';
+$string['sort_orderby_relevance'] = 'Relevance';
+$string['sort_orderby_popularity'] = 'Popularity';
+$string['sort_includechapters'] = 'Include Chapters';
+$string['addedon'] = 'Added on';
+$string['addedby'] = 'by';
+$string['show'] = 'Show';
+$string['show_all'] = 'All Media Types';
+$string['show_video'] = 'Videos';
+$string['show_playlist'] = 'Playlists';
+$string['show_photoset'] = 'Photosets';
+$string['settingsurl'] = 'Planet eStream URL';
+$string['settingsurl_text'] = 'Please enter the URL to your Planet eStream server.<br />e.g. http://videoserver.mysite.org<br />or https://videoserver.mysite.org<span>';
+$string['settings_config'] = '<p>&nbsp;</p><p>Please note: The remainder of the configuration options can be found on your Planet eStream
+ Website Administration Console, within the <span style="font-style: italic">VLE Integration section.</span></p>';
