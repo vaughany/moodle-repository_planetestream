@@ -17,17 +17,17 @@
 /**
  * Planet eStream v5 Repository Plugin
  *
- * @since 2.0
- * @package    repository_planetestream
- * @copyright  2013 Planet eStream
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @since 		2.0
+ * @package    	repository_planetestream
+ * @copyright  	2013 Planet eStream
+ * @license    	http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2013080800;
-$plugin->requires = 2012062500;
-$plugin->component = 'repository_planetestream';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '5.53';
+$plugin->version 	= 2013103100;
+$plugin->requires 	= 2012062500;
+$plugin->component 	= 'repository_planetestream';
+$plugin->maturity 	= MATURITY_STABLE;
+$plugin->release 	= '5.53';
