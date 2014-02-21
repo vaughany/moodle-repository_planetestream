@@ -30,10 +30,6 @@ require_login();
 
 class repository_planetestream extends repository {
 
-    public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array()) {
-        parent::__construct($repositoryid, $context, $options);
-    }
-
     public function check_login() {
         return !empty($this->keyword);
     }
