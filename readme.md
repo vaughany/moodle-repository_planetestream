@@ -8,5 +8,5 @@
 For installation, configuration and usage instructions, please refer to the Help Documentation within your Planet 
 eStream v5.5 website.
 
-October 2013: Modified slightly by Paul Vaughan (paulvaughan@southdevon.ac.uk) to remove a warning and make the URL
+February 2014: Modified slightly by Paul Vaughan (paulvaughan@southdevon.ac.uk) to remove a warning and make the URL
 a required field, as well as running all files through the Code Checker local plugin and resolving most of the issues.
