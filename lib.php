@@ -30,6 +30,10 @@ require_login();
 
 class repository_planetestream extends repository {
 
+    public function __construct($repositoryid, $context = SYSCONTEXTID, $options = array()) {
+        parent::__construct($repositoryid, $context, $options);
+    }
+
     public function check_login() {
         return !empty($this->keyword);
     }
@@ -234,10 +238,15 @@ class repository_planetestream extends repository {
         $help = new stdClass();
         $help->type  = 'hidden';
         $help->label = '<div style="position: relative; padding-bottom: 100px; margin-top: -100px;">
-            <div style="position: absolute; left: 400px; text-align: right;">
-            <a title="view help" onclick="window.open(\'' . $this->get_url() . '/VLE/Moodle/Help.aspx\'); return false;" href="#">
-            <img style="border-width: 0px; height: 24px; width: 24px;" title="view help" src="/repository/planetestream/pix/help.png"></a>
-            </div></div>';
+                <div style="position: absolute; left: 400px; width: 50px; text-align: center;">
+                    <a title="view help" onclick="window.open(\'' . $this->get_url() . '/VLE/Moodle/Help.aspx\'); return false;" href="#">
+                    <img style="border-width: 0px; height: 24px; width: 24px;" alt="view help" src="/repository/planetestream/pix/help.png"><br />help</a>
+                </div>
+                <div style="position: absolute; left: 450px; width: 50px; text-align: center;">
+                    <a title="add media" onclick="window.open(\'' . $this->get_url() . '/UploadContentVLE.aspx?sourceID=11\', \'add\', \'width=720,height=680,left=100,top=100\'); return false;" href="#">
+                    <img style="border-width: 0px; height: 24px; width: 24px;" alt="add media" src="/repository/planetestream/pix/addmedia.png"><br />add media</a>
+                </div>
+            </div>';
 
         // Searchbox.
         $search        = new stdClass();
@@ -352,7 +361,7 @@ class repository_planetestream extends repository {
 
         $strdimensions = $xml->dimensions[0];
         if ($strdimensions != '') {
-            $SESSION->{'planetestream_' . $this->id . '_dimensions'} = (string) '?d=' . $strdimensions;
+            $SESSION->{'planetestream_' . $this->id . '_dimensions'} = '?d=' . $strdimensions;
         }
 
         return $ret;
